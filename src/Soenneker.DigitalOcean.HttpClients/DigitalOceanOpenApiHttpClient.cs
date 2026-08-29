@@ -11,7 +11,7 @@ using Soenneker.Utils.HttpClientCache.Abstract;
 
 namespace Soenneker.DigitalOcean.HttpClients;
 
-///<inheritdoc cref="IDigitalOceanOpenApiHttpClient"/>
+/// <inheritdoc cref="IDigitalOceanOpenApiHttpClient"/>
 public sealed class DigitalOceanOpenApiHttpClient : IDigitalOceanOpenApiHttpClient
 {
     private readonly IHttpClientCache _httpClientCache;
