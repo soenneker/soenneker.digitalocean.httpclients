@@ -30,7 +30,7 @@ public static class DigitalOceanOpenApiHttpClientRegistrar
     /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddDigitalOceanOpenApiHttpClientAsScoped(this IServiceCollection services)
     {
-        services.AddHttpClientCacheAsScoped()
+        services.AddHttpClientCacheAsSingleton()
                 .TryAddScoped<IDigitalOceanOpenApiHttpClient, DigitalOceanOpenApiHttpClient>();
 
         return services;

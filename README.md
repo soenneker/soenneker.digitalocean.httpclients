@@ -59,6 +59,6 @@ public sealed class DropletReader(IDigitalOceanOpenApiHttpClient clientProvider)
 
 `Get` returns the cached client; do not dispose that `HttpClient` yourself. The provider owns it and removes it from the cache when the provider is disposed.
 
-Use `AddDigitalOceanOpenApiHttpClientAsScoped()` only when each dependency-injection scope needs an independent cached client. Singleton registration is the normal choice for stable application-wide configuration.
+`AddDigitalOceanOpenApiHttpClientAsScoped()` scopes the provider while retaining the singleton client cache. Disposing a scope releases the provider without destroying the shared `HttpClient`. Use singleton registration when the provider itself should also live for the application lifetime.
 
 This package configures transport only. It does not deserialize DigitalOcean responses, follow pagination links, or translate non-success status codes. Use the companion OpenAPI client/util packages or handle those concerns in the caller.
