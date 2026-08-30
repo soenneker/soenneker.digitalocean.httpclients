@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Threading;
 namespace Soenneker.DigitalOcean.HttpClients.Abstract;
 /// <summary>
-/// A .NET thread-safe singleton HttpClient for 
+/// Provides a cached, authenticated <see cref="HttpClient"/> for the DigitalOcean API.
 /// </summary>
 public interface IDigitalOceanOpenApiHttpClient: IDisposable, IAsyncDisposable
 {

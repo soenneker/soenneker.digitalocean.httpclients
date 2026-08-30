@@ -1,43 +1,64 @@
 [![](https://img.shields.io/nuget/v/soenneker.digitalocean.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.digitalocean.httpclients/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.digitalocean.httpclients/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.digitalocean.httpclients/actions/workflows/publish-package.yml)
 [![](https://img.shields.io/nuget/dt/soenneker.digitalocean.httpclients.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.digitalocean.httpclients/)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.digitalocean.httpclients/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.digitalocean.httpclients/actions/workflows/codeql.yml)
 
 # Soenneker.DigitalOcean.HttpClients
 
-A .NET thread-safe singleton HttpClient for.
+Provides a cached `HttpClient` configured for DigitalOcean’s API base address and bearer authentication.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.DigitalOcean.HttpClients
 ```
 
-## Quick start
+## Configuration
 
-```csharp
-using Soenneker.DigitalOcean.HttpClients.Registrars;
-using Microsoft.Extensions.DependencyInjection;
-
-var services = new ServiceCollection();
-var result = services.AddDigitalOceanOpenApiHttpClientAsSingleton();
+```json
+{
+  "DigitalOcean": {
+    "AccessToken": "your-personal-access-token"
+  }
+}
 ```
 
-Adds `DigitalOceanOpenApiHttpClient` as a singleton service.
+Store the token in user secrets, environment-backed configuration, or a secret manager rather than source control.
 
-## What you get
+Optional settings:
 
-- `IDigitalOceanOpenApiHttpClient` — A .NET thread-safe singleton HttpClient for.
-- `DigitalOceanOpenApiHttpClientRegistrar` — Registers the OpenAPI HttpClient wrapper for dependency injection.
+```json
+{
+  "DigitalOcean": {
+    "ClientBaseUrl": "https://api.digitalocean.com",
+    "AuthHeaderName": "Authorization",
+    "AuthHeaderValueTemplate": "Bearer {token}"
+  }
+}
+```
 
-## API at a glance
+The template replaces every literal `{token}` with `AccessToken`. Treat `ClientBaseUrl`, the header name, and the template as trusted configuration: the resulting authentication header is sent to that base address.
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `DigitalOceanOpenApiHttpClientRegistrar.AddDigitalOceanOpenApiHttpClientAsSingleton(services)` | Adds `DigitalOceanOpenApiHttpClient` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `DigitalOceanOpenApiHttpClientRegistrar.AddDigitalOceanOpenApiHttpClientAsScoped(services)` | Adds `DigitalOceanOpenApiHttpClient` as a scoped service. | The same service collection, so additional registrations can be chained. |
+## Registration and use
 
-## Practical notes
+```csharp
+using Soenneker.DigitalOcean.HttpClients.Abstract;
+using Soenneker.DigitalOcean.HttpClients.Registrars;
 
-- Reuse the registered client instead of constructing one per operation.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+services.AddDigitalOceanOpenApiHttpClientAsSingleton();
+
+public sealed class DropletReader(IDigitalOceanOpenApiHttpClient clientProvider)
+{
+    public async Task<string> GetDroplets(CancellationToken cancellationToken)
+    {
+        HttpClient client = await clientProvider.Get(cancellationToken);
+        return await client.GetStringAsync("/v2/droplets", cancellationToken);
+    }
+}
+```
+
+`Get` returns the cached client; do not dispose that `HttpClient` yourself. The provider owns it and removes it from the cache when the provider is disposed.
+
+Use `AddDigitalOceanOpenApiHttpClientAsScoped()` only when each dependency-injection scope needs an independent cached client. Singleton registration is the normal choice for stable application-wide configuration.
+
+This package configures transport only. It does not deserialize DigitalOcean responses, follow pagination links, or translate non-success status codes. Use the companion OpenAPI client/util packages or handle those concerns in the caller.
