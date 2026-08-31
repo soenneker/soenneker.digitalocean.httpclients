@@ -16,6 +16,7 @@ public sealed class DigitalOceanOpenApiHttpClient : IDigitalOceanOpenApiHttpClie
 {
     private readonly IHttpClientCache _httpClientCache;
     private readonly IConfiguration _config;
+    private readonly string _cacheKey = $"{nameof(DigitalOceanOpenApiHttpClient)}:{Guid.NewGuid():N}";
 
     private const string _prodBaseUrl = "https://api.digitalocean.com";
 
@@ -27,7 +28,7 @@ public sealed class DigitalOceanOpenApiHttpClient : IDigitalOceanOpenApiHttpClie
 
     public ValueTask<HttpClient> Get(CancellationToken cancellationToken = default)
     {
-        return _httpClientCache.Get(nameof(DigitalOceanOpenApiHttpClient), (config: _config, baseUrl: _config["DigitalOcean:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
+        return _httpClientCache.Get(_cacheKey, (config: _config, baseUrl: _config["DigitalOcean:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
             var apiKey = state.config.GetValueStrict<string>("DigitalOcean:AccessToken");
             string authHeaderName = state.config["DigitalOcean:AuthHeaderName"] ?? "Authorization";
@@ -47,11 +48,11 @@ public sealed class DigitalOceanOpenApiHttpClient : IDigitalOceanOpenApiHttpClie
 
     public void Dispose()
     {
-        _httpClientCache.RemoveSync(nameof(DigitalOceanOpenApiHttpClient));
+        _httpClientCache.RemoveSync(_cacheKey);
     }
 
     public ValueTask DisposeAsync()
     {
-        return _httpClientCache.Remove(nameof(DigitalOceanOpenApiHttpClient));
+        return _httpClientCache.Remove(_cacheKey);
     }
 }
