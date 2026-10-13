@@ -30,7 +30,7 @@ public sealed class DigitalOceanOpenApiHttpClient : IDigitalOceanOpenApiHttpClie
     {
         return _httpClientCache.Get(_cacheKey, (config: _config, baseUrl: _config["DigitalOcean:ClientBaseUrl"] ?? _prodBaseUrl), static state =>
         {
-            var apiKey = state.config.GetValueStrict<string>("DigitalOcean:AccessToken");
+            var apiKey = state.config.GetStringStrict("DigitalOcean:AccessToken");
             string authHeaderName = state.config["DigitalOcean:AuthHeaderName"] ?? "Authorization";
             string authHeaderValueTemplate = state.config["DigitalOcean:AuthHeaderValueTemplate"] ?? "Bearer {token}";
             string authHeaderValue = authHeaderValueTemplate.Replace("{token}", apiKey, StringComparison.Ordinal);
